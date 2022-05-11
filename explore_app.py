@@ -20,7 +20,8 @@ def read_data(path):
 if 'times_randomised' not in st.session_state:
     st.session_state['times_randomised'] = 0
 
-path = 'G:\My Drive\Thesis\model_region_2022-05-07-22-59_outputs.pkl'
+# path = 'G:\My Drive\Thesis\model_region_2022-05-07-22-59_outputs.pkl'
+path = 'model_region_2022-05-07-22-59_outputs.pkl'
 prots, prot_names = read_data(path)
 
 
