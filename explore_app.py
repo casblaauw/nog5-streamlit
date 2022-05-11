@@ -1,8 +1,6 @@
 import streamlit as st
 from streamlit import caching
 import numpy as np
-import pandas as pd
-import torch
 import matplotlib.pyplot as plt
 import sklearn.metrics as skm
 import random
