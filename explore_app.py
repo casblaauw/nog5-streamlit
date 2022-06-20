@@ -13,11 +13,10 @@ start_time = time.perf_counter()
 
 # Define functions ------------------------------------
 @st.experimental_memo
-def read_data(id):
-  output_file = 'outputs.pkl'
+def read_data(output_file = 'outputs.pkl', id = None):
   if not os.path.exists(output_file):
     gdown.download(id = id, output = output_file, quiet = False)
-  with open('outputs.pkl', 'rb') as f:
+  with open(output_file, 'rb') as f:
     proteins = pickle.load(f)
     protein_names = sorted(list(proteins.keys()))
   return proteins, protein_names
@@ -90,6 +89,13 @@ def add_disorder(fig, ax, info, labels, preds):
     ax.plot(dis, label = 'Disorder')
   return fig, ax
 
+def add_site_preds(fig, ax, info, labels, preds):
+  site_preds = preds['gly']
+  site_idx = np.array([idx for idx, aa in enumerate(info['seq']) if aa in ['S', 'T']])
+  ax.scatter(site_idx, site_preds[site_idx], s = 1)
+  # ax.plot(site_preds, label = 'Predicted site probability')
+  return fig, ax
+
 def finish_plot(fig, ax):
   ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol = 3)
   return fig, ax
@@ -100,8 +106,12 @@ def finish_plot(fig, ax):
 if 'times_randomised' not in st.session_state:
     st.session_state['times_randomised'] = 0
 
-id = '12i6RF_8dQo8L1cf-3Q3zBJgfw1GXoiJp'
-prots, prot_names = read_data(id)
+# id = '12i6RF_8dQo8L1cf-3Q3zBJgfw1GXoiJp'
+id = '14Zr36n2fCiH91UaZovROiH-VpY_NVNu8' #model_LSTMCRFCNN_v4_2022-05-28-15-24_checkpoint-epoch10_valtest_outputs.pkl 
+prots, prot_names = read_data(id = id)
+# prots, prot_names = read_data(r'G:\My Drive\Thesis\saved_outputs\model_smaller\model_smaller_2022-05-24-14-20_checkpoint-epoch32_outputs_valtest.pkl')
+# prots, prot_names = read_data(r'G:\My Drive\Thesis\saved_outputs\LSTMCRFCNN_v4\model_LSTMCRFCNN_v4_2022-05-28-15-24_checkpoint-epoch10_valtest_outputs.pkl')
+# prots, prot_names = read_data(r'G:\My Drive\Thesis\saved_outputs\LSTMCRFCNN_v4\model_LSTMCRFCNN_v4_frozen2022-05-30-21-52_checkpoint-epoch16_valtest_outputs.pkl')
 
 # Protein selection
 if st.sidebar.button('Random test/validation set protein'):
@@ -116,12 +126,14 @@ idx = prot_names.index(prot_name)
 # Plot options
 disable_acc = prots[prot_name]['info']['accessibility'] is None
 disable_dis = prots[prot_name]['info']['disorder'] is None
+disable_site_preds = 'gly' not in prots[prot_name]['output']
 
 show_stats = st.sidebar.checkbox('Show stats in title', True)
 show_seen = st.sidebar.checkbox('Show seen regions', True)
 show_acc = st.sidebar.checkbox('Show surface accessibility', False, disabled = disable_acc)
 show_dis = st.sidebar.checkbox('Show disorder', False, disabled = disable_dis)
 show_emissions = st.sidebar.checkbox('Show emissions', False)
+show_site_preds = st.sidebar.checkbox('Show site predictions', False, disabled = disable_site_preds)
 
 # Plotting area
 st.title(f"{prot_name} | {prots[prot_name]['info']['split']}")
@@ -135,6 +147,8 @@ if show_dis:
   fig, ax = add_disorder(fig, ax, prots[prot_name]['info'], prots[prot_name]['input'], prots[prot_name]['output'])
 if show_emissions:
   fig, ax = add_emissions(fig, ax, prots[prot_name]['info'], prots[prot_name]['input'], prots[prot_name]['output'])
+if show_site_preds:
+  fig, ax = add_site_preds(fig, ax, prots[prot_name]['info'], prots[prot_name]['input'], prots[prot_name]['output'])
 fig, ax = finish_plot(fig, ax)
 st.pyplot(fig)
 
